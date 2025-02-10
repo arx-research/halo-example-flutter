@@ -1,0 +1,28 @@
+PODS:
+  - cryptography_flutter (0.2.0):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_nfc_kit (3.6.0):
+    - Flutter
+
+DEPENDENCIES:
+  - cryptography_flutter (from `.symlinks/plugins/cryptography_flutter/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_nfc_kit (from `.symlinks/plugins/flutter_nfc_kit/ios`)
+
+EXTERNAL SOURCES:
+  cryptography_flutter:
+    :path: ".symlinks/plugins/cryptography_flutter/ios"
+  Flutter:
+    :path: Flutter
+  flutter_nfc_kit:
+    :path: ".symlinks/plugins/flutter_nfc_kit/ios"
+
+SPEC CHECKSUMS:
+  cryptography_flutter: 70166b3780db39960caf51fd90fe308bec22d3f1
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_nfc_kit: e1b71583eafd2c9650bc86844a7f2d185fb414f6
+
+PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
+
+COCOAPODS: 1.16.2
