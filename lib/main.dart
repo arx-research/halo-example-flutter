@@ -138,12 +138,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         // ---
                         // Create authorization hash using the provided inputs
                         // ---
-                        String ethSignature = await signWithPassword(keyNo, passwordStr, digestStr);
+                        var signRecord = await signWithPassword(keyNo, passwordStr, digestStr);
 
-                        print("ethSignature ${ethSignature}");
+                        print("ethSignature ${signRecord.ethSignature}");
+                        print("ethAddress ${signRecord.address}");
 
                         setState(() {
-                          _result = 'Signature ETH: ${ethSignature}\n\n';
+                          _result = 'Signature ETH: ${signRecord.ethSignature}\nAddress: ${signRecord.address}\n\n';
                         });
                       } else {
                         throw 'Unsupported tag type: ${tag.standard}';

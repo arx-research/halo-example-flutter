@@ -18,13 +18,13 @@ Future<void> selectHaloCore() async {
 }
 
 typedef GetKeyInfoResult = ({
-  // reference on key flags:
-  // https://github.com/arx-research/libhalo/blob/master/core/src.ts/halo/keyflags.ts
-  int keyFlags,
-  int failedPwdAttempts,
-  String publicKeyHex,
-  String publicKeyAttestSigDERHex,
-  String address,
+// reference on key flags:
+// https://github.com/arx-research/libhalo/blob/master/core/src.ts/halo/keyflags.ts
+int keyFlags,
+int failedPwdAttempts,
+String publicKeyHex,
+String publicKeyAttestSigDERHex,
+String address,
 });
 
 Future<GetKeyInfoResult> getKeyInfo(keySlotNo) async {
@@ -54,11 +54,11 @@ Future<GetKeyInfoResult> getKeyInfo(keySlotNo) async {
   String publicKeyAttestSigDERHex = HexEncoder().convert(getKeyInfoRes.sublist(3+65, 3+65+retAttLen));
 
   return (
-    keyFlags: keyFlags,
-    failedPwdAttempts: failedPwdAttempts,
-    publicKeyHex: publicKeyHex,
-    publicKeyAttestSigDERHex: publicKeyAttestSigDERHex,
-    address: address,
+  keyFlags: keyFlags,
+  failedPwdAttempts: failedPwdAttempts,
+  publicKeyHex: publicKeyHex,
+  publicKeyAttestSigDERHex: publicKeyAttestSigDERHex,
+  address: address,
   );
 }
 
@@ -84,18 +84,18 @@ Future<(int, String)?> getPK9PK8Address() async {
 
   if (getDataStructRes[0] != 0xFF) {
     // public key #9 exists and was returned
-    int len = getDataStructRes[1];
-    String publicKeyHex = bytesToHex(getDataStructRes.sublist(2, 2+len));
+    int len = getDataStructRes[0];
+    String publicKeyHex = bytesToHex(getDataStructRes.sublist(1, 1+len));
     String address = publicKeyToChecksumAddress(publicKeyHex);
     return (0x09, address);
-  } else {
-    getDataStructRes = getDataStructRes.sublist(2);
   }
+
+  getDataStructRes = getDataStructRes.sublist(2);
 
   if (getDataStructRes[0] != 0xFF) {
     // public key #8 exists and was returned
-    int len = getDataStructRes[1];
-    String publicKeyHex = bytesToHex(getDataStructRes.sublist(2, 2+len));
+    int len = getDataStructRes[0];
+    String publicKeyHex = bytesToHex(getDataStructRes.sublist(1, 1+len));
     String address = publicKeyToChecksumAddress(publicKeyHex);
     return (0x08, address);
   }
@@ -103,7 +103,12 @@ Future<(int, String)?> getPK9PK8Address() async {
   return null;
 }
 
-Future<String> signWithPassword(keySlotNo, passwordStr, digestStr) async {
+typedef SignResult = ({
+String ethSignature,
+String address,
+});
+
+Future<SignResult> signWithPassword(keySlotNo, passwordStr, digestStr) async {
   final pbkdf2 = Pbkdf2(
     macAlgorithm: Hmac.sha512(),
     iterations: 5000, // 5k iterations
@@ -160,16 +165,18 @@ Future<String> signWithPassword(keySlotNo, passwordStr, digestStr) async {
 
   List<int> sigDER = signRes.sublist(0, sigLen);
   List<int> pubKey = signRes.sublist(sigLen, sigLen + 65);
-  List<int> attDER = signRes.sublist(sigLen + 65, sigLen + 65 + attLen);
+  // List<int> attDER = signRes.sublist(sigLen + 65, sigLen + 65 + attLen);
 
   String sigDERStr = HexEncoder().convert(sigDER);
   String pubKeyStr = HexEncoder().convert(pubKey);
-  String attDERStr = HexEncoder().convert(attDER);
-
-  print('Signature DER: ${sigDERStr}');
-  print('Public Key: ${pubKeyStr}');
-  print('Key Attest DER: ${attDERStr}');
+  // String attDERStr = HexEncoder().convert(attDER);
 
   var sigPoint = derSignatureToPoint(hexToBytes(sigDERStr));
-  return getEthereumSignature(sigPoint, hexToBytes(pubKeyStr).sublist(1), hexToBytes(digestStr));
+  var ethSignature = getEthereumSignature(sigPoint, hexToBytes(pubKeyStr).sublist(1), hexToBytes(digestStr));
+  var address = publicKeyToChecksumAddress(pubKeyStr);
+
+  return (
+  ethSignature: ethSignature,
+  address: address
+  );
 }
