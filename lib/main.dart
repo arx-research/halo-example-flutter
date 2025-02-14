@@ -106,8 +106,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         // ---
                         // Inputs
                         // ---
-                        const keySlotNo = 0x08;
-                        const digestStr = "0102030405060708090A0B0C0D0E0F010102030405060708090A0B0C0D0E0F01";
+                        const digestStr = "a1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2";
                         const passwordStr = "111111"; // key slot password
 
                         // ---
@@ -116,14 +115,30 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         await selectHaloCore();
 
                         // ---
+                        // Execute get data struct to retrieve PK#9 or PK#8
+                        // ---
+                        var record = await getPK9PK8Address();
+
+                        if (record == null) {
+                          throw 'Neither public key #9 nor public key slots #9 are generated on this HaLo.';
+                        }
+
+                        var (keyNo, ethAddress) = record;
+                        print("keyNo: ${keyNo}");
+                        print("ethAddress: ${ethAddress}");
+
+                        // ---
                         // Assemble the HaLo command to get key information
                         // ---
-                        GetKeyInfoResult keyInfo = await getKeyInfo(0x08);
+                        GetKeyInfoResult keyInfo = await getKeyInfo(keyNo);
+                        print("key flags: ${keyInfo.keyFlags}");
+                        print("failed auth ctr: ${keyInfo.failedPwdAttempts}");
+                        print("ethAddress: ${keyInfo.address}");
 
                         // ---
                         // Create authorization hash using the provided inputs
                         // ---
-                        String ethSignature = await sign(0x08, "111111", "a1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2");
+                        String ethSignature = await signWithPassword(keyNo, passwordStr, digestStr);
 
                         print("ethSignature ${ethSignature}");
 

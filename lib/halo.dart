@@ -62,7 +62,48 @@ Future<GetKeyInfoResult> getKeyInfo(keySlotNo) async {
   );
 }
 
-Future<String> sign(keySlotNo, passwordStr, digestStr) async {
+Future<(int, String)?> getPK9PK8Address() async {
+  // example of GET_DATA_STRUCT HaLo command for complex logic
+
+  // this function tries to fetch public keys #9 and #8 from HaLo
+  // if pk#9 exists, returns ethereum address corresponding to it
+  // else if pk#8 exists, returns ethereum address corresponding to it
+  // else returns null
+
+  Uint8List getDataStructCmd = Uint8List.fromList([
+    0xB0, 0x51, 0x00, 0x00, // CLA, INS, P1, P2
+    0x05, // Lc
+    0x14, // SHARED_CMD_GET_DATA_STRUCT
+    // request structure:
+    0x01, 0x09, // Fetch public key #9
+    0x01, 0x08, // Fetch public key #8
+    0x00 // Le
+  ]);
+
+  List<int> getDataStructRes = await FlutterNfcKit.transceive(getDataStructCmd);
+
+  if (getDataStructRes[0] != 0xFF) {
+    // public key #9 exists and was returned
+    int len = getDataStructRes[1];
+    String publicKeyHex = bytesToHex(getDataStructRes.sublist(2, 2+len));
+    String address = publicKeyToChecksumAddress(publicKeyHex);
+    return (0x09, address);
+  } else {
+    getDataStructRes = getDataStructRes.sublist(2);
+  }
+
+  if (getDataStructRes[0] != 0xFF) {
+    // public key #8 exists and was returned
+    int len = getDataStructRes[1];
+    String publicKeyHex = bytesToHex(getDataStructRes.sublist(2, 2+len));
+    String address = publicKeyToChecksumAddress(publicKeyHex);
+    return (0x08, address);
+  }
+
+  return null;
+}
+
+Future<String> signWithPassword(keySlotNo, passwordStr, digestStr) async {
   final pbkdf2 = Pbkdf2(
     macAlgorithm: Hmac.sha512(),
     iterations: 5000, // 5k iterations

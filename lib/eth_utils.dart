@@ -43,7 +43,7 @@ String addressToChecksumAddress(String ethAddress) {
 }
 
 String publicKeyToChecksumAddress(String publicKeyHex) {
-  assert(publicKeyHex.length == 65);
+  assert(publicKeyHex.length == 2*65);
   return addressToChecksumAddress(bytesToHex(
       publicKeyToAddress(hexToBytes(publicKeyHex).sublist(1))
   ));
