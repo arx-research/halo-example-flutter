@@ -37,6 +37,10 @@ dependencies:
   cryptography_flutter: ^2.3.2 # Remove if you don't use Flutter
   esc_pos_utils_plus: ^2.0.4
   cupertino_icons: ^1.0.8
+  web3dart: ^2.7.3
+  pointycastle: ^3.9.1
+  convert: ^3.1.2
+  sec: ^1.1.0
 
 dev_dependencies:
   flutter_test:
