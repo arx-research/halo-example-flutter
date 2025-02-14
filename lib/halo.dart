@@ -9,12 +9,28 @@ import 'package:web3dart/crypto.dart';
 import 'eth_utils.dart';
 
 
-Future<void> selectHaloCore() async {
-  String result1 = await FlutterNfcKit.transceive("00A4040007481199130E9F0100");
+String checkNFCResultStr(String result) {
+  checkNFCResult(List<int>.from(hexToBytes(result)));
+  return result;
+}
 
-  if (result1 != "9000") {
-    throw "Failed to select HaLo Core application!";
+List<int> checkNFCResult(List<int> result) {
+  var statusWords = result.sublist(result.length - 2);
+
+  if ((statusWords[0] != 0x90 && statusWords[0] != 0x91) || statusWords[1] != 0x00) {
+    throw "Command failed with status: ${bytesToHex(statusWords)}";
   }
+
+  if (result.length == 4 && result[0] == 0xE1) {
+    var haloErrorCode = result.sublist(0, 2);
+    throw "Command threw a HaLo error: ${bytesToHex(haloErrorCode)}";
+  }
+
+  return result;
+}
+
+Future<void> selectHaloCore() async {
+  checkNFCResultStr(await FlutterNfcKit.transceive("00A4040007481199130E9F0100"));
 }
 
 typedef GetKeyInfoResult = ({
@@ -39,11 +55,7 @@ Future<GetKeyInfoResult> getKeyInfo(keySlotNo) async {
   // ---
   // Execute the command on HaLo
   // ---
-  List<int> getKeyInfoRes = await FlutterNfcKit.transceive(getKeyInfoCmd);
-
-  if (getKeyInfoRes.length <= 4) {
-    throw 'Command error occurred when getting key info: ${HexEncoder().convert(getKeyInfoRes)}';
-  }
+  List<int> getKeyInfoRes = checkNFCResult(await FlutterNfcKit.transceive(getKeyInfoCmd));
 
   int keyFlags = getKeyInfoRes[1];
   int failedPwdAttempts = getKeyInfoRes[2];
@@ -80,7 +92,7 @@ Future<(int, String)?> getPK9PK8Address() async {
     0x00 // Le
   ]);
 
-  List<int> getDataStructRes = await FlutterNfcKit.transceive(getDataStructCmd);
+  List<int> getDataStructRes = checkNFCResult(await FlutterNfcKit.transceive(getDataStructCmd));
 
   if (getDataStructRes[0] != 0xFF) {
     // public key #9 exists and was returned
@@ -149,11 +161,7 @@ Future<SignResult> signWithPassword(keySlotNo, passwordStr, digestStr) async {
   // ---
   // Execute the command on HaLo
   // ---
-  List<int> signRes = await FlutterNfcKit.transceive(signCmd);
-
-  if (signRes.length <= 4) {
-    throw 'Command error occurred when trying to sign: ${HexEncoder().convert(signRes)}';
-  }
+  List<int> signRes = checkNFCResult(await FlutterNfcKit.transceive(signCmd));
 
   // Response structure:
   // [DER-encoded signature - variable number of bytes]
@@ -161,7 +169,7 @@ Future<SignResult> signWithPassword(keySlotNo, passwordStr, digestStr) async {
   // [DER-encoded public key attest - variable number of bytes]
 
   int sigLen = signRes[1] + 2;
-  int attLen = signRes[sigLen + 65 + 1] + 2;
+  // int attLen = signRes[sigLen + 65 + 1] + 2;
 
   List<int> sigDER = signRes.sublist(0, sigLen);
   List<int> pubKey = signRes.sublist(sigLen, sigLen + 65);
